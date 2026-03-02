@@ -1,6 +1,6 @@
 import axios from "axios";
 import type { PostData } from "../types/post.ts";
-const baseUrl = "http://localhost:3000/api/threads";
+const baseUrl = "http://localhost:3001/api/threads";
 
 export interface ThreadAnswer {
   thread: PostData
