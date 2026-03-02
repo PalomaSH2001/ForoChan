@@ -3,11 +3,12 @@ dotenv.config();
 import express from "express";
 import type { NextFunction, Request, Response } from "express";
 import Post from "./models/Post";
+import path from "path";
 
 const app = express();
 
 app.use(express.json());
-app.use(express.static("dist"));
+app.use(express.static(path.join(__dirname, "dist")));
 
 
 const requestLogger = (
