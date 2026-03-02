@@ -10,8 +10,7 @@ const app = express();
 app.use(express.json());
 console.log("Current directory:", __dirname);
 console.log("Serving static files from:", path.join(__dirname, "..", "dist"));
-app.use(express.static(path.join(__dirname, "..", "dist")));
-
+app.use(express.static(path.join(__dirname, "../dist")));
 
 const requestLogger = (
   request: Request,
@@ -24,6 +23,8 @@ const requestLogger = (
   console.log("---");
   next();
 };
+
+app.use(requestLogger);
 
 app.get("/api/", (request, response) => {
   response.send("hola");
