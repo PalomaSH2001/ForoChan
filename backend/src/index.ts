@@ -8,7 +8,9 @@ import path from "path";
 const app = express();
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "dist")));
+console.log("Current directory:", __dirname);
+console.log("Serving static files from:", path.join(__dirname, "..", "dist"));
+app.use(express.static(path.join(__dirname, "..", "dist")));
 
 
 const requestLogger = (
