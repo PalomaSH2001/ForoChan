@@ -10,21 +10,7 @@ const app = express();
 app.use(express.json());
 console.log("Current directory:", __dirname);
 console.log("Serving static files from:", path.join(__dirname, "..", "dist"));
-app.use(express.static(path.join(__dirname, "../dist")));
-
-const requestLogger = (
-  request: Request,
-  response: Response,
-  next: NextFunction
-) => {
-  console.log("Method:", request.method);
-  console.log("Path:  ", request.path);
-  console.log("Body:  ", request.body);
-  console.log("---");
-  next();
-};
-
-app.use(requestLogger);
+app.use(express.static(path.join(__dirname, "..", "dist")));
 
 app.get("/api/", (request, response) => {
   response.send("hola");
@@ -131,6 +117,24 @@ app.post("/api/threads/:id", (request, response, next) => {
       .catch((error) => next(error));
   }
 });
+
+app.get('{*splat}', (req, res) => {
+  res.sendFile(path.join(__dirname, "..", 'dist', 'index.html'));
+});
+
+const requestLogger = (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  console.log("Method:", request.method);
+  console.log("Path:  ", request.path);
+  console.log("Body:  ", request.body);
+  console.log("---");
+  next();
+};
+
+app.use(requestLogger);
 
 const errorHandler = (
   error: { name: string; message: string },
