@@ -2,22 +2,12 @@ import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
 import type { NextFunction, Request, Response } from "express";
+import bcrypt from "bcrypt";
 import Post from "./models/Post";
+import User from "./models/User";
 import path from "path";
 
 const app = express();
-
-type Account = {
-  username: string;
-  email: string;
-  password: string;
-};
-
-const accounts: Account[] = [
-  { username: "paloma", email: "paloma@forochan.local", password: "paloma123" },
-  { username: "admin", email: "admin@forochan.local", password: "admin123" },
-  { username: "forochan", email: "forochan@forochan.local", password: "foro1234" },
-];
 
 app.use(express.json());
 console.log("Current directory:", __dirname);
@@ -28,7 +18,7 @@ app.get("/api/", (request, response) => {
   response.send("hola");
 });
 
-app.post("/api/auth/login", (request, response) => {
+app.post("/api/auth/login", (request, response, next) => {
   const username = String(request.body?.username ?? "").trim();
   const password = String(request.body?.password ?? "");
 
@@ -37,24 +27,25 @@ app.post("/api/auth/login", (request, response) => {
     return;
   }
 
-  const account = accounts.find(
-    (item) => item.username.toLowerCase() === username.toLowerCase()
-  );
+  User.findOne({ username: new RegExp(`^${username}$`, "i") })
+    .then(async (user) => {
+      if (!user) {
+        response.status(404).json({ error: "account not found" });
+        return;
+      }
 
-  if (!account) {
-    response.status(404).json({ error: "account not found" });
-    return;
-  }
+      const passwordMatch = await bcrypt.compare(password, user.passwordHash);
+      if (!passwordMatch) {
+        response.status(401).json({ error: "invalid credentials" });
+        return;
+      }
 
-  if (account.password !== password) {
-    response.status(401).json({ error: "invalid credentials" });
-    return;
-  }
-
-  response.json({ username: account.username });
+      response.json({ username: user.username });
+    })
+    .catch((error) => next(error));
 });
 
-app.post("/api/auth/register", (request, response) => {
+app.post("/api/auth/register", (request, response, next) => {
   const username = String(request.body?.username ?? "").trim();
   const email = String(request.body?.email ?? "").trim().toLowerCase();
   const password = String(request.body?.password ?? "");
@@ -64,18 +55,19 @@ app.post("/api/auth/register", (request, response) => {
     return;
   }
 
-  const hasUsername = accounts.some(
-    (item) => item.username.toLowerCase() === username.toLowerCase()
-  );
-  const hasEmail = accounts.some((item) => item.email === email);
+  User.findOne({ $or: [{ username: new RegExp(`^${username}$`, "i") }, { email }] })
+    .then(async (existing) => {
+      if (existing) {
+        response.status(409).json({ error: "account already exists" });
+        return;
+      }
 
-  if (hasUsername || hasEmail) {
-    response.status(409).json({ error: "account already exists" });
-    return;
-  }
-
-  accounts.push({ username, email, password });
-  response.status(201).json({ username });
+      const passwordHash = await bcrypt.hash(password, 10);
+      const user = new User({ username, email, passwordHash });
+      const savedUser = await user.save();
+      response.status(201).json({ username: savedUser.username });
+    })
+    .catch((error) => next(error));
 });
 
 app.get("/api/threads", (request, response) => {
