@@ -7,6 +7,18 @@ import path from "path";
 
 const app = express();
 
+type Account = {
+  username: string;
+  email: string;
+  password: string;
+};
+
+const accounts: Account[] = [
+  { username: "paloma", email: "paloma@forochan.local", password: "paloma123" },
+  { username: "admin", email: "admin@forochan.local", password: "admin123" },
+  { username: "forochan", email: "forochan@forochan.local", password: "foro1234" },
+];
+
 app.use(express.json());
 console.log("Current directory:", __dirname);
 console.log("Serving static files from:", path.join(__dirname, "..", "dist"));
@@ -14,6 +26,56 @@ app.use(express.static(path.join(__dirname, "..", "dist")));
 
 app.get("/api/", (request, response) => {
   response.send("hola");
+});
+
+app.post("/api/auth/login", (request, response) => {
+  const username = String(request.body?.username ?? "").trim();
+  const password = String(request.body?.password ?? "");
+
+  if (!username || !password) {
+    response.status(400).json({ error: "username and password are required" });
+    return;
+  }
+
+  const account = accounts.find(
+    (item) => item.username.toLowerCase() === username.toLowerCase()
+  );
+
+  if (!account) {
+    response.status(404).json({ error: "account not found" });
+    return;
+  }
+
+  if (account.password !== password) {
+    response.status(401).json({ error: "invalid credentials" });
+    return;
+  }
+
+  response.json({ username: account.username });
+});
+
+app.post("/api/auth/register", (request, response) => {
+  const username = String(request.body?.username ?? "").trim();
+  const email = String(request.body?.email ?? "").trim().toLowerCase();
+  const password = String(request.body?.password ?? "");
+
+  if (!username || !email || !password) {
+    response.status(400).json({ error: "username, email and password are required" });
+    return;
+  }
+
+  const hasUsername = accounts.some(
+    (item) => item.username.toLowerCase() === username.toLowerCase()
+  );
+  const hasEmail = accounts.some((item) => item.email === email);
+
+  if (hasUsername || hasEmail) {
+    response.status(409).json({ error: "account already exists" });
+    return;
+  }
+
+  accounts.push({ username, email, password });
+  response.status(201).json({ username });
 });
 
 app.get("/api/threads", (request, response) => {

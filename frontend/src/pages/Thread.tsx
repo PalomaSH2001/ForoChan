@@ -4,8 +4,34 @@ import { useEffect, useState } from "react";
 import Post from "../components/Post";
 import postService from "../services/post";
 import PostForm from "../components/PostForm";
+import LoginModal from "../components/LoginModal";
+import RegisterModal from "../components/RegisterModal";
 
-function Thread() {
+interface ThreadProps {
+  currentUser: string | null;
+  isLoginModalOpen: boolean;
+  isRegisterModalOpen: boolean;
+  onOpenLogin: () => void;
+  onCloseLogin: () => void;
+  onOpenRegister: () => void;
+  onCloseRegister: () => void;
+  onLogin: (username: string, password: string) => Promise<void>;
+  onRegister: (username: string, email: string, password: string) => Promise<void>;
+  onLogout: () => void;
+}
+
+function Thread({
+  currentUser,
+  isLoginModalOpen,
+  isRegisterModalOpen,
+  onOpenLogin,
+  onCloseLogin,
+  onOpenRegister,
+  onCloseRegister,
+  onLogin,
+  onRegister,
+  onLogout,
+}: ThreadProps) {
   const { id } = useParams(); 
   const [thread, setThread] = useState<PostData | null>(null);
   const [comments, setComments] = useState<PostData[]>([]);
@@ -60,6 +86,20 @@ function Thread() {
 
   return (
     <div>
+      <div className="top-bar">
+        {currentUser ? (
+          <>
+            <span>Conectado como <strong>{currentUser}</strong></span>
+            <button type="button" onClick={onLogout}>Cerrar sesion</button>
+          </>
+        ) : (
+          <>
+            <button type="button" className="registerButton" onClick={onOpenRegister}>Registrarse</button>
+            <button type="button" className="loginButton" onClick={onOpenLogin}>Iniciar sesion</button>
+          </>
+        )}
+      </div>
+
       <h1>Thread #{thread.id}</h1>
       <PostForm
         replyToId={replyTo?.id}
@@ -67,7 +107,7 @@ function Thread() {
         onSubmit={(content, author) => {
           const postObject: Omit<PostData, "id"> = {
             content,
-            author: author || "Anónimo",
+            author: currentUser || author || "Anonimo",
             thread: replyTo? thread.id : null,
             parent: replyTo ? replyTo.id : null,
             createdAt: new Date(),
@@ -81,7 +121,12 @@ function Thread() {
             setReplyTo(null);
           });
         }}
+        currentUser={currentUser}
       />
+
+      <LoginModal isOpen={isLoginModalOpen} onClose={onCloseLogin} onLogin={onLogin} />
+      <RegisterModal isOpen={isRegisterModalOpen} onClose={onCloseRegister} onRegister={onRegister} />
+
       <Post
         post={{ ...thread, clickable: false }}
         onReply={setReplyTo}
