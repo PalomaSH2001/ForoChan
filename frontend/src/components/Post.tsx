@@ -28,7 +28,7 @@ const Post = ({ post, onReply, onLike, onDislike, canReact = false }: PostProps)
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 <h4>{post.author ?? "Anónimo"}</h4>
                 {isClickable ? 
-                    <Link to={`posts/${post.id}`} style={{ fontSize: "12px", color: "gray" }}>
+                    <Link to={`posts/${post.id}`} style={{ fontSize: "12px", color: "blue" }}>
                     #{post.id}
                 </Link>
                 :
