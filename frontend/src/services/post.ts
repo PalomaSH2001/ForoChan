@@ -34,10 +34,17 @@ const createComment = (id: string, newObject: Omit<PostData, "id">) => {
   return axios.post(`${baseUrl}/${id}`, newObject).then((request) => request.data);
 };
 
+const react = (id: string, username: string, type: "like" | "dislike") => {
+  return axios
+    .post(`${baseUrl}/${id}/reactions`, { username, type })
+    .then((request) => request.data);
+};
+
 export default {
   getAll,
   create,
   update,
   getThreadById,
-  createComment
+  createComment,
+  react
 };

@@ -34,28 +34,32 @@ function HomePage({
   const [posts, setPosts] = useState<PostData[]>([]);
 
   const handleLike = (post: PostData) => {
-    const updatedPost: PostData = {
-      ...post,
-      likes: (post.likes ?? 0) + 1,
-      dislikes: post.dislikes ?? 0,
-      updatedAt: new Date()
-    };
+    if (!currentUser) {
+      onOpenLogin();
+      return;
+    }
 
-    postService.update(post.id, updatedPost).then((savedPost) => {
-      setPosts((prevPosts) => prevPosts.map((item) => (item.id === savedPost.id ? { ...savedPost, clickable: true } : item)));
+    postService.react(post.id, currentUser, "like").then((savedPost) => {
+      setPosts((prevPosts) =>
+        prevPosts.map((item) =>
+          item.id === savedPost.id ? { ...savedPost, clickable: true } : item
+        )
+      );
     });
   };
 
   const handleDislike = (post: PostData) => {
-    const updatedPost: PostData = {
-      ...post,
-      likes: post.likes ?? 0,
-      dislikes: (post.dislikes ?? 0) + 1,
-      updatedAt: new Date()
-    };
+    if (!currentUser) {
+      onOpenLogin();
+      return;
+    }
 
-    postService.update(post.id, updatedPost).then((savedPost) => {
-      setPosts((prevPosts) => prevPosts.map((item) => (item.id === savedPost.id ? { ...savedPost, clickable: true } : item)));
+    postService.react(post.id, currentUser, "dislike").then((savedPost) => {
+      setPosts((prevPosts) =>
+        prevPosts.map((item) =>
+          item.id === savedPost.id ? { ...savedPost, clickable: true } : item
+        )
+      );
     });
   };
 
@@ -110,6 +114,7 @@ function HomePage({
             post={post}
             onLike={handleLike}
             onDislike={handleDislike}
+            canReact={Boolean(currentUser)}
           />
         ))}
         </div>

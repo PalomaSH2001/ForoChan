@@ -123,15 +123,14 @@ app.get("/api/threads/:id", (request, response, next) => {
 });
 
 app.put("/api/threads/:id", (request, response, next) => {
-  const { content, author, likes, dislikes } = request.body;
+  const { content, author } = request.body;
 
   Post.findById(request.params.id)
     .then((post) => {
       if (post) {
         post.content = content;
         post.author = author;
-        post.likes = likes;
-        post.dislikes = dislikes;
+        post.updatedAt = new Date();
 
         post.save().then((updatedPost) => {
           response.json(updatedPost);
@@ -139,6 +138,74 @@ app.put("/api/threads/:id", (request, response, next) => {
       } else {
         response.status(404).end();
       }
+    })
+    .catch((error) => next(error));
+});
+
+app.post("/api/threads/:id/reactions", (request, response, next) => {
+  const username = String(request.body?.username ?? "").trim().toLowerCase();
+  const type = String(request.body?.type ?? "").trim();
+
+  if (!username) {
+    response.status(401).json({ error: "login required" });
+    return;
+  }
+
+  if (type !== "like" && type !== "dislike") {
+    response.status(400).json({ error: "invalid reaction type" });
+    return;
+  }
+
+  User.findOne({ username: new RegExp(`^${username}$`, "i") })
+    .then((user) => {
+      if (!user) {
+        response.status(401).json({ error: "account required" });
+        return null;
+      }
+
+      return Post.findById(request.params.id).then((post) => {
+        if (!post) {
+          response.status(404).json({ error: "post not found" });
+          return null;
+        }
+
+        type ReactionValue = "like" | "dislike";
+        type ReactionItem = { username: string; value: ReactionValue };
+
+        const reactions = post.reactions as ReactionItem[];
+        const existingReaction = reactions.find(
+          (reaction) => reaction.username === username
+        );
+
+        if (existingReaction?.value === type) {
+          response.status(409).json({ error: "already reacted" });
+          return null;
+        }
+
+        if (existingReaction) {
+          if (existingReaction.value === "like") {
+            post.likes = Math.max(0, (post.likes ?? 0) - 1);
+          } else {
+            post.dislikes = Math.max(0, (post.dislikes ?? 0) - 1);
+          }
+          existingReaction.value = type;
+        } else {
+          reactions.push({ username, value: type as ReactionValue });
+        }
+
+        if (type === "like") {
+          post.likes = (post.likes ?? 0) + 1;
+        } else {
+          post.dislikes = (post.dislikes ?? 0) + 1;
+        }
+
+        post.updatedAt = new Date();
+
+        return post.save().then((updatedPost) => {
+          response.json(updatedPost);
+          return null;
+        });
+      });
     })
     .catch((error) => next(error));
 });

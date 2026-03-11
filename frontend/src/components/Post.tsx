@@ -6,9 +6,10 @@ interface PostProps {
   onReply?: (post: PostData) => void;
   onLike?: (post: PostData) => void;
   onDislike?: (post: PostData) => void;
+    canReact?: boolean;
 }
 
-const Post = ({ post, onReply, onLike, onDislike }: PostProps) => {
+const Post = ({ post, onReply, onLike, onDislike, canReact = false }: PostProps) => {
     const isClickable = post.clickable ?? true;
     const diff = post.likes - post.dislikes;
 
@@ -49,13 +50,26 @@ const Post = ({ post, onReply, onLike, onDislike }: PostProps) => {
                 </button>
                 )}
 
-                <button type="button" className="like-button" onClick={() => onLike?.(post)}>
+                <button
+                    type="button"
+                    className="like-button"
+                    onClick={() => onLike?.(post)}
+                >
                     👍 {post.likes ?? 0}
                 </button>
-                <button type="button" className="like-button" onClick={() => onDislike?.(post)}>
+                <button
+                    type="button"
+                    className="like-button"
+                    onClick={() => onDislike?.(post)}
+                >
                     👎 {post.dislikes ?? 0}
                 </button>
-            </div>
+                </div>
+                {!canReact && (onLike || onDislike) && (
+                    <p style={{ fontSize: "12px", color: "#888", marginTop: "4px" }}>
+                        <em>Inicia sesión para reaccionar</em>
+                    </p>
+                )}
 
             
         </div>

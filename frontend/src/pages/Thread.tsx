@@ -38,38 +38,42 @@ function Thread({
   const [replyTo, setReplyTo] = useState<PostData | null>(null);
 
   const handleLike = (post: PostData) => {
-    const updatedPost: PostData = {
-      ...post,
-      likes: (post.likes ?? 0) + 1,
-      dislikes: post.dislikes ?? 0,
-      updatedAt: new Date()
-    };
+    if (!currentUser) {
+      onOpenLogin();
+      return;
+    }
 
-    postService.update(post.id, updatedPost).then((savedPost) => {
+    postService.react(post.id, currentUser, "like").then((savedPost) => {
       if (savedPost.thread === null) {
         setThread({ ...savedPost, clickable: false });
         return;
       }
 
-      setComments((prevComments) => prevComments.map((item) => (item.id === savedPost.id ? { ...savedPost, clickable: false } : item)));
+      setComments((prevComments) =>
+        prevComments.map((item) =>
+          item.id === savedPost.id ? { ...savedPost, clickable: false } : item
+        )
+      );
     });
   };
 
   const handleDislike = (post: PostData) => {
-    const updatedPost: PostData = {
-      ...post,
-      likes: post.likes ?? 0,
-      dislikes: (post.dislikes ?? 0) + 1,
-      updatedAt: new Date()
-    };
+    if (!currentUser) {
+      onOpenLogin();
+      return;
+    }
 
-    postService.update(post.id, updatedPost).then((savedPost) => {
+    postService.react(post.id, currentUser, "dislike").then((savedPost) => {
       if (savedPost.thread === null) {
         setThread({ ...savedPost, clickable: false });
         return;
       }
 
-      setComments((prevComments) => prevComments.map((item) => (item.id === savedPost.id ? { ...savedPost, clickable: false } : item)));
+      setComments((prevComments) =>
+        prevComments.map((item) =>
+          item.id === savedPost.id ? { ...savedPost, clickable: false } : item
+        )
+      );
     });
   };
 
@@ -132,6 +136,7 @@ function Thread({
         onReply={setReplyTo}
         onLike={handleLike}
         onDislike={handleDislike}
+        canReact={Boolean(currentUser)}
       />
 
       <h3>Comentarios</h3>
@@ -142,6 +147,7 @@ function Thread({
           onReply={setReplyTo}
           onLike={handleLike}
           onDislike={handleDislike}
+          canReact={Boolean(currentUser)}
         />
       ))}
     </div>

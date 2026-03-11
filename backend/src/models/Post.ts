@@ -15,9 +15,26 @@ if (url) {
 
 const forbiddenNames = [
   "Huevito rey",
-  "Matías Toro",
+  "Matï¿½as Toro",
   "Memes es mal ramo"
 ];
+
+const reactionSchema = new mongoose.Schema(
+  {
+    username: {
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true,
+    },
+    value: {
+      type: String,
+      required: true,
+      enum: ["like", "dislike"],
+    },
+  },
+  { _id: false }
+);
 
 const postSchema = new mongoose.Schema({
   content: {
@@ -66,6 +83,11 @@ const postSchema = new mongoose.Schema({
   dislikes: {
     type: Number,
     default: 0
+  },
+
+  reactions: {
+    type: [reactionSchema],
+    default: []
   }
 });
 
