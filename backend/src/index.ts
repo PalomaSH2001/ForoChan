@@ -173,13 +173,26 @@ app.post("/api/threads/:id/reactions", (request, response, next) => {
         type ReactionItem = { username: string; value: ReactionValue };
 
         const reactions = post.reactions as ReactionItem[];
-        const existingReaction = reactions.find(
+        const existingReactionIndex = reactions.findIndex(
           (reaction) => reaction.username === username
         );
+        const existingReaction =
+          existingReactionIndex >= 0 ? reactions[existingReactionIndex] : undefined;
 
         if (existingReaction?.value === type) {
-          response.status(409).json({ error: "already reacted" });
-          return null;
+          if (type === "like") {
+            post.likes = Math.max(0, (post.likes ?? 0) - 1);
+          } else {
+            post.dislikes = Math.max(0, (post.dislikes ?? 0) - 1);
+          }
+
+          reactions.splice(existingReactionIndex, 1);
+          post.updatedAt = new Date();
+
+          return post.save().then((updatedPost) => {
+            response.json(updatedPost);
+            return null;
+          });
         }
 
         if (existingReaction) {
