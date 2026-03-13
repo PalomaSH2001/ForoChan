@@ -1,5 +1,5 @@
 # 💻 Clon simple de un foro
-Aplicación Fullstack que permite interactuar en un pequeño foro, posteando, reaccionando y respondiendo a otro post o comentario.
+Aplicación Fullstack que permite interactuar en un pequeño foro, posteando, reaccionando y respondiendo a otro post o comentarios.
 
 ## 🚀 Tecnologías utilizadas
 - Frontend: React 19+
